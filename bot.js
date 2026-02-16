@@ -1,4 +1,6 @@
-import makeWASocket, { 
+// ===== Imports =====
+import makeWASocket from '@whiskeysockets/baileys' // default import pour ESM
+import { 
     DisconnectReason, 
     useMultiFileAuthState,
     makeInMemoryStore,
@@ -9,14 +11,17 @@ import pino from 'pino'
 import config from './config.js'
 import { loadCommands, handleCommand } from './utils/commandHandler.js'
 
+// ===== Variables =====
 let sock
 let qrCode = null
 let store
 
+// ===== Fonction pour récupérer le QR code =====
 export function getQR() {
     return qrCode
 }
 
+// ===== Fonction principale pour démarrer le bot =====
 export async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState('./auth_info')
     
@@ -25,6 +30,7 @@ export async function startBot() {
         logger: pino().child({ level: 'silent', stream: 'store' }) 
     })
 
+    // Créer le socket WhatsApp
     sock = makeWASocket({
         auth: state,
         printQRInTerminal: true,
@@ -39,6 +45,7 @@ export async function startBot() {
         }
     })
 
+    // Lier le store aux événements du socket
     store?.bind(sock.ev)
 
     // Charger toutes les commandes
@@ -83,7 +90,7 @@ export async function startBot() {
     // Sauvegarder les credentials
     sock.ev.on('creds.update', saveCreds)
 
-    // Gestion des messages
+    // Gestion des messages entrants
     sock.ev.on('messages.upsert', async ({ messages, type }) => {
         if (type !== 'notify') return
 
@@ -113,6 +120,7 @@ export async function startBot() {
     return sock
 }
 
+// ===== Fonction pour récupérer le socket =====
 export function getSocket() {
     return sock
 }
